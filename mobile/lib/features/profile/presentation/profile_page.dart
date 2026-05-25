@@ -21,7 +21,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   String _gender = 'Male';
   String _activityLevel = 'Moderately Active';
-  String _fitnessGoal = 'maintenance';
+  String _fitnessGoal = 'maintain';
   String _unitPreference = 'metric';
 
   bool _initialized = false;
@@ -61,7 +61,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     
     // Attempt to match activityLevel from local schema if not set
     // For local database fallback support:
-    _fitnessGoal = user.fitnessGoal ?? 'maintenance';
+    _fitnessGoal = user.fitnessGoal ?? 'maintain';
 
     // Set height and weight based on preferred unit preference
     final heightCm = user.heightCm ?? 170.0;
@@ -221,9 +221,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
             // Compute target calories based on goal
             double targetCalories = computedTdee;
-            if (_fitnessGoal == 'weight_loss') {
+            if (_fitnessGoal == 'deficit') {
               targetCalories = computedTdee - 500;
-            } else if (_fitnessGoal == 'muscle_gain') {
+            } else if (_fitnessGoal == 'surplus') {
               targetCalories = computedTdee + 300;
             }
 
@@ -525,9 +525,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             value: _fitnessGoal,
             decoration: const InputDecoration(labelText: 'Fitness Goal'),
             items: const [
-              DropdownMenuItem(value: 'weight_loss', child: Text('Weight Loss (Deficit)')),
-              DropdownMenuItem(value: 'muscle_gain', child: Text('Muscle Gain (Surplus)')),
-              DropdownMenuItem(value: 'maintenance', child: Text('Maintenance')),
+              DropdownMenuItem(value: 'deficit', child: Text('Weight Loss (Deficit)')),
+              DropdownMenuItem(value: 'surplus', child: Text('Muscle Gain (Surplus)')),
+              DropdownMenuItem(value: 'maintain', child: Text('Maintenance')),
             ],
             onChanged: (val) {
               if (val != null) setState(() => _fitnessGoal = val);

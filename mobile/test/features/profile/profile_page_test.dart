@@ -65,7 +65,7 @@ void main() {
       gender: 'Male',
       heightCm: 180.0,
       weightKg: 80.0,
-      fitnessGoal: 'maintenance',
+      fitnessGoal: 'maintain',
       unitPreference: 'metric',
       createdAt: DateTime.now(),
     );
@@ -102,7 +102,7 @@ void main() {
       gender: 'Male',
       heightCm: 180.0,
       weightKg: 80.0,
-      fitnessGoal: 'maintenance',
+      fitnessGoal: 'maintain',
       unitPreference: 'metric',
       createdAt: DateTime.now(),
     );
@@ -138,7 +138,7 @@ void main() {
       gender: 'Male',
       heightCm: 180.0,
       weightKg: 80.0,
-      fitnessGoal: 'maintenance',
+      fitnessGoal: 'maintain',
       unitPreference: 'metric',
       createdAt: DateTime.now(),
     );

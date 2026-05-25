@@ -89,7 +89,7 @@ void main() {
         'gender': 'Male',
         'heightCm': 180.0,
         'weightKg': 75.0,
-        'fitnessGoal': 'maintenance',
+        'fitnessGoal': 'maintain',
         'unitPreference': 'metric',
         'createdAt': DateTime.now().toIso8601String(),
       };
@@ -119,7 +119,7 @@ void main() {
         'gender': 'Male',
         'heightCm': 175.0,
         'weightKg': 70.0,
-        'fitnessGoal': 'maintenance',
+        'fitnessGoal': 'maintain',
         'unitPreference': 'metric',
         'createdAt': DateTime.now().toIso8601String(),
       };
@@ -140,7 +140,7 @@ void main() {
         weightKg: 70.0,
         unitPreference: 'metric',
         activityLevel: 'Moderately Active',
-        fitnessGoal: 'maintenance',
+        fitnessGoal: 'maintain',
       );
 
       expect(success, true);
