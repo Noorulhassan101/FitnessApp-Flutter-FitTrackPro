@@ -63,6 +63,8 @@ class DailySummaries extends Table {
   RealColumn get totalCaloriesConsumed => real().withDefault(const Constant(0.0))();
   RealColumn get netCalories => real().withDefault(const Constant(0.0))();
   IntColumn get streakDay => integer().withDefault(const Constant(0))();
+  IntColumn get steps => integer().withDefault(const Constant(0))();
+  RealColumn get activeCalories => real().withDefault(const Constant(0.0))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -73,7 +75,7 @@ class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -83,6 +85,10 @@ class LocalDatabase extends _$LocalDatabase {
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.createTable(dailySummaries);
+          }
+          if (from < 3) {
+            await m.addColumn(dailySummaries, dailySummaries.steps);
+            await m.addColumn(dailySummaries, dailySummaries.activeCalories);
           }
         },
       );
@@ -151,6 +157,41 @@ class LocalDatabase extends _$LocalDatabase {
 
   Future<void> upsertUser(User user) {
     return into(users).insertOnConflictUpdate(user);
+  }
+
+  Stream<DailySummary?> watchTodaySummary(String userId) {
+    final today = DateTime.now();
+    final todayStart = DateTime(today.year, today.month, today.day);
+    return (select(dailySummaries)
+          ..where((t) => t.userId.equals(userId) & t.date.equals(todayStart)))
+        .watchSingleOrNull();
+  }
+
+  Future<DailySummary?> getDailySummary(String userId, DateTime date) {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    return (select(dailySummaries)
+          ..where((t) => t.userId.equals(userId) & t.date.equals(startOfDay)))
+        .getSingleOrNull();
+  }
+
+  Future<List<Meal>> getMealsForDay(String userId, DateTime date) {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+    return (select(meals)
+          ..where((t) => t.userId.equals(userId) & t.loggedAt.isBetweenValues(startOfDay, endOfDay)))
+        .get();
+  }
+
+  Future<List<Workout>> getWorkoutsForDay(String userId, DateTime date) {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+    return (select(workouts)
+          ..where((t) => t.userId.equals(userId) & t.loggedAt.isBetweenValues(startOfDay, endOfDay)))
+        .get();
+  }
+
+  Future<User?> getUser(String userId) {
+    return (select(users)..where((t) => t.id.equals(userId))).getSingleOrNull();
   }
 }
 

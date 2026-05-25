@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:mobile/core/network/api_client.dart';
+import 'package:mobile/core/database/local_database.dart';
+import 'package:mobile/features/auth/providers/auth_provider.dart';
 import 'package:mobile/features/workouts/providers/workouts_provider.dart';
 import 'package:mobile/features/meals/providers/meals_provider.dart';
 
@@ -15,6 +17,8 @@ class HomeData {
   final double caloriesConsumed;
   final double caloriesBurned;
   final String fitnessGoal;
+  final int steps;
+  final double activeCalories;
 
   HomeData({
     required this.userName,
@@ -27,6 +31,8 @@ class HomeData {
     this.caloriesConsumed = 0,
     this.caloriesBurned = 0,
     this.fitnessGoal = 'maintain',
+    this.steps = 0,
+    this.activeCalories = 0.0,
   });
 
   double get caloriesRemaining => dailyCalorieTarget - caloriesConsumed + caloriesBurned;
@@ -34,24 +40,40 @@ class HomeData {
 
 final homeDataProvider = FutureProvider<HomeData>((ref) async {
   final dio = ref.read(dioProvider);
+  final auth = ref.watch(authProvider);
+  final userId = auth.userId;
 
   // Watch today's workouts to automatically react to changes
-  double caloriesBurned = 0;
+  double workoutsBurned = 0;
   try {
     final workouts = await ref.watch(todayWorkoutsProvider.future);
-    caloriesBurned = workouts.fold<double>(0, (sum, w) => sum + w.caloriesBurned);
-  } catch (_) {
-    // If local DB watching fails, fallback to 0
-  }
+    workoutsBurned = workouts.fold<double>(0, (sum, w) => sum + w.caloriesBurned);
+  } catch (_) {}
 
   // Watch today's meals to automatically react to changes
   double caloriesConsumed = 0;
   try {
     final meals = await ref.watch(todayMealsProvider.future);
     caloriesConsumed = meals.fold<double>(0, (sum, m) => sum + m.caloriesConsumed);
-  } catch (_) {
-    // If local DB watching fails, fallback to 0
+  } catch (_) {}
+
+  // Watch today's health summary to react to steps & active calories
+  double healthActiveCalories = 0.0;
+  int todaySteps = 0;
+  if (userId != null) {
+    final db = ref.watch(databaseProvider);
+    try {
+      final summary = await ref.watch(StreamProvider<DailySummary?>((ref) {
+        return db.watchTodaySummary(userId);
+      }).future);
+      if (summary != null) {
+        healthActiveCalories = summary.activeCalories;
+        todaySteps = summary.steps;
+      }
+    } catch (_) {}
   }
+
+  final totalBurned = workoutsBurned + healthActiveCalories;
 
   try {
     final response = await dio.get<Map<String, dynamic>>('/user/profile');
@@ -85,8 +107,10 @@ final homeDataProvider = FutureProvider<HomeData>((ref) async {
       carbsTarget: carbsCals / 4,      // 4 cal per gram carbs
       fatTarget: fatCals / 9,          // 9 cal per gram fat
       caloriesConsumed: caloriesConsumed,
-      caloriesBurned: caloriesBurned,
+      caloriesBurned: totalBurned,
       fitnessGoal: fitnessGoal,
+      steps: todaySteps,
+      activeCalories: healthActiveCalories,
     );
   } on DioException {
     // Return defaults if profile fetch fails
@@ -99,7 +123,9 @@ final homeDataProvider = FutureProvider<HomeData>((ref) async {
       carbsTarget: 200,
       fatTarget: 67,
       caloriesConsumed: caloriesConsumed,
-      caloriesBurned: caloriesBurned,
+      caloriesBurned: totalBurned,
+      steps: todaySteps,
+      activeCalories: healthActiveCalories,
     );
   }
 });

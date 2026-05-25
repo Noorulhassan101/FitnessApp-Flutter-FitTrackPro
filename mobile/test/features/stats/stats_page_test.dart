@@ -58,6 +58,8 @@ void main() {
         totalCaloriesBurned: 500,
         netCalories: 1500,
         streakDay: 5,
+        steps: 0,
+        activeCalories: 0.0,
       ),
     ];
 

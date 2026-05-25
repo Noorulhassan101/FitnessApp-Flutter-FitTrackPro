@@ -27,6 +27,8 @@ void main() {
         totalCaloriesBurned: 0.0,
         netCalories: 0.0,
         streakDay: 0,
+        steps: 0,
+        activeCalories: 0.0,
       ),
     );
   });
@@ -50,7 +52,7 @@ void main() {
 
   group('StatsProvider', () {
     test('weeklyStatsProvider returns stream from database', () async {
-      final mockSummaries = [
+      final List<DailySummary> mockSummaries = [
         DailySummary(
           id: 'summary-1',
           userId: 'user-123',
@@ -59,6 +61,8 @@ void main() {
           totalCaloriesBurned: 400,
           netCalories: 1600,
           streakDay: 3,
+          steps: 0,
+          activeCalories: 0.0,
         ),
       ];
 

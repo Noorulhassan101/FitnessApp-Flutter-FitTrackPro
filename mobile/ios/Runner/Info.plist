@@ -71,7 +71,10 @@
 					<string>Main</string>
 				</dict>
 			</array>
-		</dict>
 	</dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>We need access to your health data to synchronize steps and active calorie metrics with your daily fitness logs.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>We need access to write health metrics to track your daily fitness logs.</string>
 </dict>
 </plist>

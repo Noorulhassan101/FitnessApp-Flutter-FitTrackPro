@@ -47,6 +47,8 @@ class StatsNotifier extends Notifier<void> {
             totalCaloriesBurned: (map['totalCaloriesBurned'] as num).toDouble(),
             netCalories: (map['netCalories'] as num).toDouble(),
             streakDay: streak,
+            steps: map['steps'] as int? ?? 0,
+            activeCalories: (map['activeCalories'] as num?)?.toDouble() ?? 0.0,
           );
 
           await db.upsertSummary(summary);

@@ -1740,6 +1740,28 @@ class $DailySummariesTable extends DailySummaries
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _stepsMeta = const VerificationMeta('steps');
+  @override
+  late final GeneratedColumn<int> steps = GeneratedColumn<int>(
+    'steps',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _activeCaloriesMeta = const VerificationMeta(
+    'activeCalories',
+  );
+  @override
+  late final GeneratedColumn<double> activeCalories = GeneratedColumn<double>(
+    'active_calories',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1749,6 +1771,8 @@ class $DailySummariesTable extends DailySummaries
     totalCaloriesConsumed,
     netCalories,
     streakDay,
+    steps,
+    activeCalories,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1816,6 +1840,21 @@ class $DailySummariesTable extends DailySummaries
         streakDay.isAcceptableOrUnknown(data['streak_day']!, _streakDayMeta),
       );
     }
+    if (data.containsKey('steps')) {
+      context.handle(
+        _stepsMeta,
+        steps.isAcceptableOrUnknown(data['steps']!, _stepsMeta),
+      );
+    }
+    if (data.containsKey('active_calories')) {
+      context.handle(
+        _activeCaloriesMeta,
+        activeCalories.isAcceptableOrUnknown(
+          data['active_calories']!,
+          _activeCaloriesMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1853,6 +1892,14 @@ class $DailySummariesTable extends DailySummaries
         DriftSqlType.int,
         data['${effectivePrefix}streak_day'],
       )!,
+      steps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}steps'],
+      )!,
+      activeCalories: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}active_calories'],
+      )!,
     );
   }
 
@@ -1870,6 +1917,8 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
   final double totalCaloriesConsumed;
   final double netCalories;
   final int streakDay;
+  final int steps;
+  final double activeCalories;
   const DailySummary({
     required this.id,
     required this.userId,
@@ -1878,6 +1927,8 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
     required this.totalCaloriesConsumed,
     required this.netCalories,
     required this.streakDay,
+    required this.steps,
+    required this.activeCalories,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1889,6 +1940,8 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
     map['total_calories_consumed'] = Variable<double>(totalCaloriesConsumed);
     map['net_calories'] = Variable<double>(netCalories);
     map['streak_day'] = Variable<int>(streakDay);
+    map['steps'] = Variable<int>(steps);
+    map['active_calories'] = Variable<double>(activeCalories);
     return map;
   }
 
@@ -1901,6 +1954,8 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
       totalCaloriesConsumed: Value(totalCaloriesConsumed),
       netCalories: Value(netCalories),
       streakDay: Value(streakDay),
+      steps: Value(steps),
+      activeCalories: Value(activeCalories),
     );
   }
 
@@ -1921,6 +1976,8 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
       ),
       netCalories: serializer.fromJson<double>(json['netCalories']),
       streakDay: serializer.fromJson<int>(json['streakDay']),
+      steps: serializer.fromJson<int>(json['steps']),
+      activeCalories: serializer.fromJson<double>(json['activeCalories']),
     );
   }
   @override
@@ -1934,6 +1991,8 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
       'totalCaloriesConsumed': serializer.toJson<double>(totalCaloriesConsumed),
       'netCalories': serializer.toJson<double>(netCalories),
       'streakDay': serializer.toJson<int>(streakDay),
+      'steps': serializer.toJson<int>(steps),
+      'activeCalories': serializer.toJson<double>(activeCalories),
     };
   }
 
@@ -1945,6 +2004,8 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
     double? totalCaloriesConsumed,
     double? netCalories,
     int? streakDay,
+    int? steps,
+    double? activeCalories,
   }) => DailySummary(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -1953,6 +2014,8 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
     totalCaloriesConsumed: totalCaloriesConsumed ?? this.totalCaloriesConsumed,
     netCalories: netCalories ?? this.netCalories,
     streakDay: streakDay ?? this.streakDay,
+    steps: steps ?? this.steps,
+    activeCalories: activeCalories ?? this.activeCalories,
   );
   DailySummary copyWithCompanion(DailySummariesCompanion data) {
     return DailySummary(
@@ -1969,6 +2032,10 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
           ? data.netCalories.value
           : this.netCalories,
       streakDay: data.streakDay.present ? data.streakDay.value : this.streakDay,
+      steps: data.steps.present ? data.steps.value : this.steps,
+      activeCalories: data.activeCalories.present
+          ? data.activeCalories.value
+          : this.activeCalories,
     );
   }
 
@@ -1981,7 +2048,9 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
           ..write('totalCaloriesBurned: $totalCaloriesBurned, ')
           ..write('totalCaloriesConsumed: $totalCaloriesConsumed, ')
           ..write('netCalories: $netCalories, ')
-          ..write('streakDay: $streakDay')
+          ..write('streakDay: $streakDay, ')
+          ..write('steps: $steps, ')
+          ..write('activeCalories: $activeCalories')
           ..write(')'))
         .toString();
   }
@@ -1995,6 +2064,8 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
     totalCaloriesConsumed,
     netCalories,
     streakDay,
+    steps,
+    activeCalories,
   );
   @override
   bool operator ==(Object other) =>
@@ -2006,7 +2077,9 @@ class DailySummary extends DataClass implements Insertable<DailySummary> {
           other.totalCaloriesBurned == this.totalCaloriesBurned &&
           other.totalCaloriesConsumed == this.totalCaloriesConsumed &&
           other.netCalories == this.netCalories &&
-          other.streakDay == this.streakDay);
+          other.streakDay == this.streakDay &&
+          other.steps == this.steps &&
+          other.activeCalories == this.activeCalories);
 }
 
 class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
@@ -2017,6 +2090,8 @@ class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
   final Value<double> totalCaloriesConsumed;
   final Value<double> netCalories;
   final Value<int> streakDay;
+  final Value<int> steps;
+  final Value<double> activeCalories;
   final Value<int> rowid;
   const DailySummariesCompanion({
     this.id = const Value.absent(),
@@ -2026,6 +2101,8 @@ class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
     this.totalCaloriesConsumed = const Value.absent(),
     this.netCalories = const Value.absent(),
     this.streakDay = const Value.absent(),
+    this.steps = const Value.absent(),
+    this.activeCalories = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DailySummariesCompanion.insert({
@@ -2036,6 +2113,8 @@ class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
     this.totalCaloriesConsumed = const Value.absent(),
     this.netCalories = const Value.absent(),
     this.streakDay = const Value.absent(),
+    this.steps = const Value.absent(),
+    this.activeCalories = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        userId = Value(userId),
@@ -2048,6 +2127,8 @@ class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
     Expression<double>? totalCaloriesConsumed,
     Expression<double>? netCalories,
     Expression<int>? streakDay,
+    Expression<int>? steps,
+    Expression<double>? activeCalories,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2060,6 +2141,8 @@ class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
         'total_calories_consumed': totalCaloriesConsumed,
       if (netCalories != null) 'net_calories': netCalories,
       if (streakDay != null) 'streak_day': streakDay,
+      if (steps != null) 'steps': steps,
+      if (activeCalories != null) 'active_calories': activeCalories,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2072,6 +2155,8 @@ class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
     Value<double>? totalCaloriesConsumed,
     Value<double>? netCalories,
     Value<int>? streakDay,
+    Value<int>? steps,
+    Value<double>? activeCalories,
     Value<int>? rowid,
   }) {
     return DailySummariesCompanion(
@@ -2083,6 +2168,8 @@ class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
           totalCaloriesConsumed ?? this.totalCaloriesConsumed,
       netCalories: netCalories ?? this.netCalories,
       streakDay: streakDay ?? this.streakDay,
+      steps: steps ?? this.steps,
+      activeCalories: activeCalories ?? this.activeCalories,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2115,6 +2202,12 @@ class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
     if (streakDay.present) {
       map['streak_day'] = Variable<int>(streakDay.value);
     }
+    if (steps.present) {
+      map['steps'] = Variable<int>(steps.value);
+    }
+    if (activeCalories.present) {
+      map['active_calories'] = Variable<double>(activeCalories.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2131,6 +2224,8 @@ class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
           ..write('totalCaloriesConsumed: $totalCaloriesConsumed, ')
           ..write('netCalories: $netCalories, ')
           ..write('streakDay: $streakDay, ')
+          ..write('steps: $steps, ')
+          ..write('activeCalories: $activeCalories, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2972,6 +3067,8 @@ typedef $$DailySummariesTableCreateCompanionBuilder =
       Value<double> totalCaloriesConsumed,
       Value<double> netCalories,
       Value<int> streakDay,
+      Value<int> steps,
+      Value<double> activeCalories,
       Value<int> rowid,
     });
 typedef $$DailySummariesTableUpdateCompanionBuilder =
@@ -2983,6 +3080,8 @@ typedef $$DailySummariesTableUpdateCompanionBuilder =
       Value<double> totalCaloriesConsumed,
       Value<double> netCalories,
       Value<int> streakDay,
+      Value<int> steps,
+      Value<double> activeCalories,
       Value<int> rowid,
     });
 
@@ -3027,6 +3126,16 @@ class $$DailySummariesTableFilterComposer
 
   ColumnFilters<int> get streakDay => $composableBuilder(
     column: $table.streakDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get steps => $composableBuilder(
+    column: $table.steps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get activeCalories => $composableBuilder(
+    column: $table.activeCalories,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3074,6 +3183,16 @@ class $$DailySummariesTableOrderingComposer
     column: $table.streakDay,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get steps => $composableBuilder(
+    column: $table.steps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get activeCalories => $composableBuilder(
+    column: $table.activeCalories,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DailySummariesTableAnnotationComposer
@@ -3111,6 +3230,14 @@ class $$DailySummariesTableAnnotationComposer
 
   GeneratedColumn<int> get streakDay =>
       $composableBuilder(column: $table.streakDay, builder: (column) => column);
+
+  GeneratedColumn<int> get steps =>
+      $composableBuilder(column: $table.steps, builder: (column) => column);
+
+  GeneratedColumn<double> get activeCalories => $composableBuilder(
+    column: $table.activeCalories,
+    builder: (column) => column,
+  );
 }
 
 class $$DailySummariesTableTableManager
@@ -3153,6 +3280,8 @@ class $$DailySummariesTableTableManager
                 Value<double> totalCaloriesConsumed = const Value.absent(),
                 Value<double> netCalories = const Value.absent(),
                 Value<int> streakDay = const Value.absent(),
+                Value<int> steps = const Value.absent(),
+                Value<double> activeCalories = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DailySummariesCompanion(
                 id: id,
@@ -3162,6 +3291,8 @@ class $$DailySummariesTableTableManager
                 totalCaloriesConsumed: totalCaloriesConsumed,
                 netCalories: netCalories,
                 streakDay: streakDay,
+                steps: steps,
+                activeCalories: activeCalories,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3173,6 +3304,8 @@ class $$DailySummariesTableTableManager
                 Value<double> totalCaloriesConsumed = const Value.absent(),
                 Value<double> netCalories = const Value.absent(),
                 Value<int> streakDay = const Value.absent(),
+                Value<int> steps = const Value.absent(),
+                Value<double> activeCalories = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DailySummariesCompanion.insert(
                 id: id,
@@ -3182,6 +3315,8 @@ class $$DailySummariesTableTableManager
                 totalCaloriesConsumed: totalCaloriesConsumed,
                 netCalories: netCalories,
                 streakDay: streakDay,
+                steps: steps,
+                activeCalories: activeCalories,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

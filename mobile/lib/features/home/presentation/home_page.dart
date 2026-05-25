@@ -3,60 +3,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/features/auth/providers/auth_provider.dart';
 import 'package:mobile/features/home/providers/home_provider.dart';
+import 'package:mobile/features/home/providers/health_provider.dart';
 import 'package:mobile/features/workouts/providers/workouts_provider.dart';
 import 'package:mobile/features/meals/providers/meals_provider.dart';
 import 'package:mobile/features/stats/presentation/stats_page.dart';
 import 'package:mobile/features/profile/presentation/profile_page.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final homeAsync = ref.watch(homeDataProvider);
-
-    return homeAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: Color(0xFFF9F9FB),
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        backgroundColor: const Color(0xFFF9F9FB),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
-              const Text('Failed to load data'),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(homeDataProvider),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      ),
-      data: (homeData) => _HomeContent(homeData: homeData),
-    );
-  }
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomeContent extends ConsumerStatefulWidget {
-  final HomeData homeData;
-  const _HomeContent({required this.homeData});
-
-  @override
-  ConsumerState<_HomeContent> createState() => _HomeContentState();
-}
-
-class _HomeContentState extends ConsumerState<_HomeContent> {
+class _HomePageState extends ConsumerState<HomePage> {
   int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    final homeData = widget.homeData;
+    final homeAsync = ref.watch(homeDataProvider);
+
+    // Extract username for AppBar even during loading/error
+    final userName = homeAsync.value?.userName ?? 'User';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FB),
@@ -82,7 +50,7 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
                   style: TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w500),
                 ),
                 Text(
-                  homeData.userName,
+                  userName,
                   style: const TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -99,7 +67,7 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
           const SizedBox(width: 8),
         ],
       ),
-      body: _buildBody(homeData),
+      body: _buildBody(homeAsync),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -119,14 +87,32 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
     );
   }
 
-  Widget _buildBody(HomeData homeData) {
+  Widget _buildBody(AsyncValue<HomeData> homeAsync) {
     switch (_currentIndex) {
       case 1:
         return const StatsPage();
       case 2:
         return const ProfilePage();
       default:
-        return _buildHomeTab(homeData);
+        return homeAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text('Failed to load data'),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () => ref.invalidate(homeDataProvider),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+          data: (homeData) => _buildHomeTab(homeData),
+        );
     }
   }
 
@@ -158,9 +144,56 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
             ),
             child: Column(
               children: [
-                const Text(
-                  'Calories Remaining',
-                  style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const SizedBox(width: 48), // Balancer for the sync button
+                    const Text(
+                      'Calories Remaining',
+                      style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    IconButton(
+                      icon: ref.watch(healthSyncProvider).isSyncing
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.sync_rounded, color: Colors.white70, size: 20),
+                      onPressed: ref.watch(healthSyncProvider).isSyncing
+                          ? null
+                          : () async {
+                              await ref.read(healthSyncProvider.notifier).syncHealthData();
+                              if (mounted) {
+                                final syncState = ref.read(healthSyncProvider);
+                                if (syncState.errorMessage != null) {
+                                  // Request permissions if not granted
+                                  await ref.read(healthSyncProvider.notifier).requestPermissions();
+                                  final postState = ref.read(healthSyncProvider);
+                                  if (postState.errorMessage != null && mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(postState.errorMessage!),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Health metrics synchronized successfully!'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      tooltip: 'Sync health data',
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -191,6 +224,16 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
                     _buildMacroIndicator('Protein', '${homeData.proteinTarget.round()}g', Colors.white),
                     _buildMacroIndicator('Carbs', '${homeData.carbsTarget.round()}g', Colors.white),
                     _buildMacroIndicator('Fats', '${homeData.fatTarget.round()}g', Colors.white),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(color: Colors.white24, height: 1),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildHealthIndicator(Icons.directions_walk_rounded, 'Steps Today', '${homeData.steps}'),
+                    _buildHealthIndicator(Icons.bolt_rounded, 'Active Energy', '${homeData.activeCalories.round()} kcal'),
                   ],
                 ),
               ],
@@ -524,6 +567,30 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
         Text(label, style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.w500)),
         const SizedBox(height: 4),
         Text(value, style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildHealthIndicator(IconData icon, String label, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white70, size: 22),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
       ],
     );
   }

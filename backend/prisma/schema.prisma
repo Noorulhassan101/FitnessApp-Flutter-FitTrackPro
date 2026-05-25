@@ -66,6 +66,8 @@ model DailySummary {
   totalCaloriesConsumed Float    @default(0)
   netCalories           Float    @default(0)
   streakDay             Int      @default(0)
+  steps                 Int      @default(0)
+  activeCalories        Float    @default(0)
   createdAt             DateTime @default(now())
 
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)

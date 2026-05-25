@@ -36,10 +36,17 @@ export async function summaryRoutes(fastify: FastifyInstance) {
         baseTarget = tdee + 300;
       }
 
-      // 2. Fetch meals and workouts logged in the last 7 days
+      // 2. Fetch summaries, meals, and workouts logged in the last 7 days
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       sevenDaysAgo.setHours(0, 0, 0, 0);
+
+      const existingSummaries = await prisma.dailySummary.findMany({
+        where: {
+          userId,
+          date: { gte: sevenDaysAgo },
+        },
+      });
 
       const meals = await prisma.mealLog.findMany({
         where: {
@@ -61,6 +68,8 @@ export async function summaryRoutes(fastify: FastifyInstance) {
         totalCaloriesConsumed: number;
         totalCaloriesBurned: number;
         netCalories: number;
+        steps: number;
+        activeCalories: number;
       }>();
 
       // Initialize summary map for the last 7 days (including today)
@@ -68,11 +77,18 @@ export async function summaryRoutes(fastify: FastifyInstance) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         const dateStr = d.toISOString().split('T')[0];
+
+        const matchingDb = existingSummaries.find(
+          s => new Date(s.date).toISOString().split('T')[0] === dateStr
+        );
+
         summaryMap.set(dateStr, {
           date: dateStr,
           totalCaloriesConsumed: 0,
-          totalCaloriesBurned: 0,
-          netCalories: 0,
+          totalCaloriesBurned: matchingDb ? matchingDb.activeCalories : 0.0,
+          netCalories: 0.0,
+          steps: matchingDb ? matchingDb.steps : 0,
+          activeCalories: matchingDb ? matchingDb.activeCalories : 0.0,
         });
       }
 
@@ -96,13 +112,12 @@ export async function summaryRoutes(fastify: FastifyInstance) {
 
       // Compute net calories
       const historyList = Array.from(summaryMap.values()).map(item => {
-        // Net Calories Remaining = Base Target - Consumed + Burned
+        // Net Calories Remaining = Base Target - Consumed + Burned (which includes activeCalories)
         item.netCalories = baseTarget - item.totalCaloriesConsumed + item.totalCaloriesBurned;
         return item;
       });
 
       // 4. Calculate active logging streak
-      // Query ALL meals and workouts for the user ordered by date descending
       const allMeals = await prisma.mealLog.findMany({
         where: { userId },
         select: { loggedAt: true },
@@ -115,7 +130,6 @@ export async function summaryRoutes(fastify: FastifyInstance) {
         orderBy: { loggedAt: 'desc' },
       });
 
-      // Gather all logging dates as sorted set
       const logDatesSet = new Set<string>();
       allMeals.forEach(m => logDatesSet.add(new Date(m.loggedAt).toISOString().split('T')[0]));
       allWorkouts.forEach(w => logDatesSet.add(new Date(w.loggedAt).toISOString().split('T')[0]));
@@ -124,12 +138,10 @@ export async function summaryRoutes(fastify: FastifyInstance) {
       const todayStr = new Date().toISOString().split('T')[0];
       const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
-      // Check if user has logged anything today or yesterday to start counting
       let currentCheckDate = new Date();
       let hasLoggedOnCheckDate = logDatesSet.has(todayStr) || logDatesSet.has(yesterdayStr);
 
       if (hasLoggedOnCheckDate) {
-        // If they logged yesterday but not today, start counting from yesterday
         if (!logDatesSet.has(todayStr) && logDatesSet.has(yesterdayStr)) {
           currentCheckDate.setDate(currentCheckDate.getDate() - 1);
         }
@@ -138,15 +150,14 @@ export async function summaryRoutes(fastify: FastifyInstance) {
           const checkStr = currentCheckDate.toISOString().split('T')[0];
           if (logDatesSet.has(checkStr)) {
             streak++;
-            currentCheckDate.setDate(currentCheckDate.getDate() - 1); // Go back one day
+            currentCheckDate.setDate(currentCheckDate.getDate() - 1);
           } else {
             break;
           }
         }
       }
 
-      // 5. Update/Sync the computed summary into Prisma database for completeness (optional sync log caching)
-      // For each day in the last 7 days, let's write to DailySummary
+      // 5. Cache summary records to database
       for (const summary of historyList) {
         try {
           await prisma.dailySummary.upsert({
@@ -161,6 +172,8 @@ export async function summaryRoutes(fastify: FastifyInstance) {
               totalCaloriesBurned: summary.totalCaloriesBurned,
               netCalories: summary.netCalories,
               streakDay: streak,
+              steps: summary.steps,
+              activeCalories: summary.activeCalories,
             },
             create: {
               userId,
@@ -169,10 +182,12 @@ export async function summaryRoutes(fastify: FastifyInstance) {
               totalCaloriesBurned: summary.totalCaloriesBurned,
               netCalories: summary.netCalories,
               streakDay: streak,
+              steps: summary.steps,
+              activeCalories: summary.activeCalories,
             },
           });
         } catch (_) {
-          // Fail silently on cache update errors to prevent request crashes
+          // Fail silently on cache update errors
         }
       }
 
@@ -183,6 +198,97 @@ export async function summaryRoutes(fastify: FastifyInstance) {
     } catch (error) {
       fastify.log.error(error);
       reply.status(500).send({ message: 'Internal server error fetching summaries' });
+    }
+  });
+
+  // PATCH /sync (Sync steps and active calories for a specific date)
+  fastify.patch('/sync', async (request, reply) => {
+    const userId = request.user?.id;
+    if (!userId) {
+      reply.status(401).send({ message: 'Unauthorized' });
+      return;
+    }
+
+    const { date, steps, activeCalories } = request.body as any;
+
+    if (!date) {
+      reply.status(400).send({ message: 'Missing date parameter' });
+      return;
+    }
+
+    try {
+      const targetDate = new Date(date);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        reply.status(404).send({ message: 'User not found' });
+        return;
+      }
+
+      const tdee = user.tdee || 2000.0;
+      let baseTarget = tdee;
+      if (user.fitnessGoal === 'deficit') {
+        baseTarget = tdee - 500;
+      } else if (user.fitnessGoal === 'surplus') {
+        baseTarget = tdee + 300;
+      }
+
+      const startOfDay = new Date(targetDate);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const meals = await prisma.mealLog.findMany({
+        where: {
+          userId,
+          loggedAt: { gte: startOfDay, lte: endOfDay },
+        },
+      });
+
+      const workouts = await prisma.workoutLog.findMany({
+        where: {
+          userId,
+          loggedAt: { gte: startOfDay, lte: endOfDay },
+        },
+      });
+
+      const totalMealsCals = meals.reduce((sum, m) => sum + m.caloriesConsumed, 0);
+      const totalWorkoutsCals = workouts.reduce((sum, w) => sum + w.caloriesBurned, 0);
+
+      const combinedBurned = totalWorkoutsCals + (activeCalories || 0.0);
+      const computedNet = baseTarget - totalMealsCals + combinedBurned;
+
+      const updatedSummary = await prisma.dailySummary.upsert({
+        where: {
+          userId_date: {
+            userId,
+            date: targetDate,
+          },
+        },
+        update: {
+          steps: steps || 0,
+          activeCalories: activeCalories || 0.0,
+          totalCaloriesBurned: combinedBurned,
+          netCalories: computedNet,
+        },
+        create: {
+          userId,
+          date: targetDate,
+          steps: steps || 0,
+          activeCalories: activeCalories || 0.0,
+          totalCaloriesConsumed: totalMealsCals,
+          totalCaloriesBurned: combinedBurned,
+          netCalories: computedNet,
+        },
+      });
+
+      reply.send(updatedSummary);
+    } catch (error) {
+      fastify.log.error(error);
+      reply.status(500).send({ message: 'Internal server error syncing health data' });
     }
   });
 }
