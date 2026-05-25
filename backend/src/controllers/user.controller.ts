@@ -20,6 +20,12 @@ export async function userRoutes(fastify: FastifyInstance) {
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
+        include: {
+          goals: {
+            orderBy: { startDate: 'desc' },
+            take: 1,
+          },
+        },
       });
 
       if (!user) {
@@ -75,6 +81,42 @@ export async function userRoutes(fastify: FastifyInstance) {
       const multiplier = activityMultipliers[activityLevel] || 1.55;
       const tdee = bmr * multiplier;
 
+      // Calculate dailyCalorieTarget and goalType based on fitnessGoal
+      let dailyCalorieTarget = tdee;
+      let goalType = 'maintain';
+      if (fitnessGoal === 'weight_loss') {
+        dailyCalorieTarget = tdee - 500;
+        goalType = 'deficit';
+      } else if (fitnessGoal === 'muscle_gain') {
+        dailyCalorieTarget = tdee + 300;
+        goalType = 'surplus';
+      }
+
+      // Upsert the user's calorie goal to prevent duplicates
+      const existingGoal = await prisma.goal.findFirst({
+        where: { userId },
+      });
+
+      if (existingGoal) {
+        await prisma.goal.update({
+          where: { id: existingGoal.id },
+          data: {
+            goalType,
+            dailyCalorieTarget,
+            startDate: new Date(),
+          },
+        });
+      } else {
+        await prisma.goal.create({
+          data: {
+            userId,
+            goalType,
+            dailyCalorieTarget,
+            startDate: new Date(),
+          },
+        });
+      }
+
       const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: {
@@ -88,32 +130,13 @@ export async function userRoutes(fastify: FastifyInstance) {
           bmr,
           tdee,
         },
-      });
-
-      // Upsert the user's calorie goal to prevent duplicates
-      const existingGoal = await prisma.goal.findFirst({
-        where: { userId },
-      });
-
-      if (existingGoal) {
-        await prisma.goal.update({
-          where: { id: existingGoal.id },
-          data: {
-            goalType: fitnessGoal,
-            dailyCalorieTarget: tdee,
-            startDate: new Date(),
+        include: {
+          goals: {
+            orderBy: { startDate: 'desc' },
+            take: 1,
           },
-        });
-      } else {
-        await prisma.goal.create({
-          data: {
-            userId,
-            goalType: fitnessGoal,
-            dailyCalorieTarget: tdee,
-            startDate: new Date(),
-          },
-        });
-      }
+        },
+      });
 
       reply.send(updatedUser);
     } catch (error) {

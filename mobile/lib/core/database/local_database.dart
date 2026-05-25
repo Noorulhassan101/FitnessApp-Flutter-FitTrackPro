@@ -143,6 +143,15 @@ class LocalDatabase extends _$LocalDatabase {
   Future<void> upsertSummary(DailySummary summary) {
     return into(dailySummaries).insertOnConflictUpdate(summary);
   }
+
+  // User Queries
+  Stream<User?> watchUser(String userId) {
+    return (select(users)..where((t) => t.id.equals(userId))).watchSingleOrNull();
+  }
+
+  Future<void> upsertUser(User user) {
+    return into(users).insertOnConflictUpdate(user);
+  }
 }
 
 LazyDatabase _openConnection() {

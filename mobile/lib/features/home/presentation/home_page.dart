@@ -6,6 +6,7 @@ import 'package:mobile/features/home/providers/home_provider.dart';
 import 'package:mobile/features/workouts/providers/workouts_provider.dart';
 import 'package:mobile/features/meals/providers/meals_provider.dart';
 import 'package:mobile/features/stats/presentation/stats_page.dart';
+import 'package:mobile/features/profile/presentation/profile_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -123,18 +124,7 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
       case 1:
         return const StatsPage();
       case 2:
-        return const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.person_rounded, size: 64, color: Colors.black26),
-              SizedBox(height: 16),
-              Text('Coming Soon', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black54)),
-              SizedBox(height: 8),
-              Text('Profile will be available in a future update.', style: TextStyle(color: Colors.black38)),
-            ],
-          ),
-        );
+        return const ProfilePage();
       default:
         return _buildHomeTab(homeData);
     }
