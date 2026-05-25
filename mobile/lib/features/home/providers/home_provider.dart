@@ -1,0 +1,95 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import 'package:mobile/core/network/api_client.dart';
+import 'package:mobile/features/workouts/providers/workouts_provider.dart';
+
+class HomeData {
+  final String userName;
+  final double dailyCalorieTarget;
+  final double bmr;
+  final double tdee;
+  final double proteinTarget; // grams
+  final double carbsTarget;   // grams
+  final double fatTarget;     // grams
+  final double caloriesConsumed;
+  final double caloriesBurned;
+  final String fitnessGoal;
+
+  HomeData({
+    required this.userName,
+    required this.dailyCalorieTarget,
+    required this.bmr,
+    required this.tdee,
+    required this.proteinTarget,
+    required this.carbsTarget,
+    required this.fatTarget,
+    this.caloriesConsumed = 0,
+    this.caloriesBurned = 0,
+    this.fitnessGoal = 'maintain',
+  });
+
+  double get caloriesRemaining => dailyCalorieTarget - caloriesConsumed + caloriesBurned;
+}
+
+final homeDataProvider = FutureProvider<HomeData>((ref) async {
+  final dio = ref.read(dioProvider);
+
+  // Watch today's workouts to automatically react to changes
+  double caloriesBurned = 0;
+  try {
+    final workouts = await ref.watch(todayWorkoutsProvider.future);
+    caloriesBurned = workouts.fold<double>(0, (sum, w) => sum + w.caloriesBurned);
+  } catch (_) {
+    // If local DB watching fails, fallback to 0
+  }
+
+  try {
+    final response = await dio.get<Map<String, dynamic>>('/user/profile');
+    final data = response.data!;
+
+    final name = data['name'] as String? ?? 'User';
+    final bmr = (data['bmr'] as num?)?.toDouble() ?? 1500.0;
+    final tdee = (data['tdee'] as num?)?.toDouble() ?? 2000.0;
+    final fitnessGoal = data['fitnessGoal'] as String? ?? 'maintain';
+
+    // Calculate the user's daily calorie target based on fitness goal
+    double dailyTarget = tdee;
+    if (fitnessGoal == 'deficit') {
+      dailyTarget = tdee - 500; // 500 cal deficit
+    } else if (fitnessGoal == 'surplus') {
+      dailyTarget = tdee + 300; // 300 cal surplus
+    }
+
+    // Calculate macro targets from daily calorie target
+    // 30% protein, 40% carbs, 30% fat
+    final proteinCals = dailyTarget * 0.30;
+    final carbsCals = dailyTarget * 0.40;
+    final fatCals = dailyTarget * 0.30;
+
+    return HomeData(
+      userName: name,
+      dailyCalorieTarget: dailyTarget,
+      bmr: bmr,
+      tdee: tdee,
+      proteinTarget: proteinCals / 4,  // 4 cal per gram protein
+      carbsTarget: carbsCals / 4,      // 4 cal per gram carbs
+      fatTarget: fatCals / 9,          // 9 cal per gram fat
+      caloriesConsumed: 0, // Will be populated in Meal Logging sprint
+      caloriesBurned: caloriesBurned,
+      fitnessGoal: fitnessGoal,
+    );
+  } on DioException {
+    // Return defaults if profile fetch fails
+    return HomeData(
+      userName: 'User',
+      dailyCalorieTarget: 2000,
+      bmr: 1500,
+      tdee: 2000,
+      proteinTarget: 150,
+      carbsTarget: 200,
+      fatTarget: 67,
+      caloriesConsumed: 0,
+      caloriesBurned: caloriesBurned,
+    );
+  }
+});

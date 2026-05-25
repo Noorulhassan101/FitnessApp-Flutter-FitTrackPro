@@ -1,0 +1,111 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  passwordHash   String
+  name           String?
+  age            Int?
+  gender         String?
+  heightCm       Float?
+  weightKg       Float?
+  fitnessGoal    String?         // weight_loss, muscle_gain, maintenance
+  activityLevel  String?         // Sedentary, Lightly Active, Moderately Active, Very Active
+  bmr            Float?
+  tdee           Float?
+  unitPreference String          @default("metric") // metric, imperial
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  
+  workouts       WorkoutLog[]
+  meals          MealLog[]
+  dailySummaries DailySummary[]
+  goals          Goal[]
+  customFoods    FoodItem[]
+  notifications  Notification[]
+}
+
+model WorkoutLog {
+  id             String   @id @default(uuid())
+  userId         String
+  activityType   String
+  durationMin    Int
+  caloriesBurned Float
+  metEstimate    Float
+  notes          String?
+  loggedAt       DateTime
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MealLog {
+  id               String   @id @default(uuid())
+  userId           String
+  mealCategory     String   // breakfast, lunch, dinner, snack
+  foodName         String
+  caloriesConsumed Float
+  loggedAt         DateTime
+  createdAt        DateTime @default(now())
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DailySummary {
+  id                    String   @id @default(uuid())
+  userId                String
+  date                  DateTime @db.Date
+  totalCaloriesBurned   Float    @default(0)
+  totalCaloriesConsumed Float    @default(0)
+  netCalories           Float    @default(0)
+  streakDay             Int      @default(0)
+  createdAt             DateTime @default(now())
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model Goal {
+  id                 String   @id @default(uuid())
+  userId             String
+  goalType           String   // deficit, surplus, maintain
+  dailyCalorieTarget Float
+  startDate          DateTime
+  endDate            DateTime?
+  createdAt          DateTime @default(now())
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FoodItem {
+  id              String   @id @default(uuid())
+  name            String
+  caloriesPer100g Float
+  servingSizeG    Float
+  isCustom        Boolean  @default(false)
+  userId          String?
+  createdAt       DateTime @default(now())
+
+  user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id          String    @id @default(uuid())
+  userId      String
+  type        String    // daily_summary, workout_reminder, goal_alert
+  scheduledAt DateTime
+  sentAt      DateTime?
+  message     String
+  isRead      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

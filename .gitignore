@@ -1,0 +1,68 @@
+# Root .gitignore for FitTrackPro project
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.db
+*.sqlite
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node / Backend
+node_modules/
+dist/
+coverage/
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+
+# Flutter / Mobile
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+.fvm/
+
+# IDE/Editor files (IntelliJ, VS Code, etc)
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Android Specific
+.gradle/
+local.properties
+key.properties
+app/debug/
+app/profile/
+app/release/
+*.jks
+*.keystore
+GeneratedPluginRegistrant.java
+
+# iOS Specific
+.symlinks/
+Pods/
+App.framework
+Flutter.framework
+Generated.xcconfig
+flutter_export_environment.sh
+GeneratedPluginRegistrant.*
+
+# Google Services / API Keys / Secrets
+google-services.json
+GoogleService-Info.plist
+**/google-services.json
+**/GoogleService-Info.plist
+*.env*
+**/*.env*

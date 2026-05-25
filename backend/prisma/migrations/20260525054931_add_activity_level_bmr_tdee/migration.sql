@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "activityLevel" TEXT,
+ADD COLUMN     "bmr" DOUBLE PRECISION,
+ADD COLUMN     "tdee" DOUBLE PRECISION;
