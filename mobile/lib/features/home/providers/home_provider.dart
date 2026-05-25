@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:mobile/core/network/api_client.dart';
 import 'package:mobile/features/workouts/providers/workouts_provider.dart';
+import 'package:mobile/features/meals/providers/meals_provider.dart';
 
 class HomeData {
   final String userName;
@@ -43,6 +44,15 @@ final homeDataProvider = FutureProvider<HomeData>((ref) async {
     // If local DB watching fails, fallback to 0
   }
 
+  // Watch today's meals to automatically react to changes
+  double caloriesConsumed = 0;
+  try {
+    final meals = await ref.watch(todayMealsProvider.future);
+    caloriesConsumed = meals.fold<double>(0, (sum, m) => sum + m.caloriesConsumed);
+  } catch (_) {
+    // If local DB watching fails, fallback to 0
+  }
+
   try {
     final response = await dio.get<Map<String, dynamic>>('/user/profile');
     final data = response.data!;
@@ -74,7 +84,7 @@ final homeDataProvider = FutureProvider<HomeData>((ref) async {
       proteinTarget: proteinCals / 4,  // 4 cal per gram protein
       carbsTarget: carbsCals / 4,      // 4 cal per gram carbs
       fatTarget: fatCals / 9,          // 9 cal per gram fat
-      caloriesConsumed: 0, // Will be populated in Meal Logging sprint
+      caloriesConsumed: caloriesConsumed,
       caloriesBurned: caloriesBurned,
       fitnessGoal: fitnessGoal,
     );
@@ -88,7 +98,7 @@ final homeDataProvider = FutureProvider<HomeData>((ref) async {
       proteinTarget: 150,
       carbsTarget: 200,
       fatTarget: 67,
-      caloriesConsumed: 0,
+      caloriesConsumed: caloriesConsumed,
       caloriesBurned: caloriesBurned,
     );
   }

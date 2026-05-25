@@ -5,6 +5,7 @@ import 'package:mobile/core/database/local_database.dart';
 import 'package:mobile/features/auth/providers/auth_provider.dart';
 import 'package:mobile/features/home/providers/home_provider.dart';
 import 'package:mobile/features/workouts/providers/workouts_provider.dart';
+import 'package:mobile/features/meals/providers/meals_provider.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -227,37 +228,144 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () => context.push('/add-meal'),
                 child: const Text('Add Meal', style: TextStyle(color: Color(0xFF1A36A8), fontWeight: FontWeight.bold)),
               ),
             ],
           ),
           const SizedBox(height: 16),
           
-          // Empty State
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.black12),
+          ref.watch(todayMealsProvider).when(
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: CircularProgressIndicator(),
+              ),
             ),
-            child: Column(
-              children: [
-                Icon(Icons.restaurant_menu_rounded, size: 64, color: Colors.black12),
-                const SizedBox(height: 16),
-                const Text(
-                  'No meals logged yet',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black54),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Track your first meal to see your progress.',
-                  style: TextStyle(fontSize: 14, color: Colors.black38),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            error: (error, stack) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Text('Failed to load meals: $error', style: const TextStyle(color: Colors.red)),
+              ),
             ),
+            data: (meals) {
+              if (meals.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.black12),
+                  ),
+                  child: const Column(
+                    children: [
+                      Icon(Icons.restaurant_menu_rounded, size: 64, color: Colors.black12),
+                      SizedBox(height: 16),
+                      Text(
+                        'No meals logged yet',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black54),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Track your first meal to see your progress.',
+                        style: TextStyle(fontSize: 14, color: Colors.black38),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              final Map<String, IconData> mealIcons = {
+                'breakfast': Icons.wb_sunny_rounded,
+                'lunch': Icons.lunch_dining_rounded,
+                'dinner': Icons.dinner_dining_rounded,
+                'snack': Icons.cookie_rounded,
+              };
+
+              String capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: meals.length,
+                itemBuilder: (context, index) {
+                  final meal = meals[index];
+                  final categoryKey = meal.mealCategory.toLowerCase();
+                  final icon = mealIcons[categoryKey] ?? Icons.restaurant_menu_rounded;
+
+                  return Dismissible(
+                    key: Key(meal.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 28),
+                    ),
+                    onDismissed: (direction) async {
+                      await ref.read(mealsNotifierProvider.notifier).deleteMeal(meal.id);
+                      ref.invalidate(homeDataProvider);
+                    },
+                    child: Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: const BorderSide(color: Colors.black12),
+                      ),
+                      elevation: 0,
+                      color: Colors.white,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A36A8).withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(icon, color: const Color(0xFF1A36A8), size: 24),
+                        ),
+                        title: Text(
+                          meal.foodName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text(
+                              capitalize(meal.mealCategory),
+                              style: const TextStyle(color: Colors.black54, fontSize: 13),
+                            ),
+                            if (!meal.isSynced) ...[
+                              const SizedBox(height: 4),
+                              const Row(
+                                children: [
+                                  Icon(Icons.cloud_off_rounded, size: 12, color: Colors.black38),
+                                  SizedBox(width: 4),
+                                  Text('Saved offline', style: TextStyle(fontSize: 10, color: Colors.black38)),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                        trailing: Text(
+                          '-${meal.caloriesConsumed.round()} kcal',
+                          style: const TextStyle(
+                            color: Color(0xFFD9383A),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           ),
           const SizedBox(height: 32),
 

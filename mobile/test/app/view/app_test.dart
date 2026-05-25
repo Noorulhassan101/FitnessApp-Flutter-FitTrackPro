@@ -7,11 +7,11 @@ void main() {
   group('App', () {
     testWidgets('renders LandingPage initially', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
+        const ProviderScope(
           child: App(),
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 100));
       expect(find.byType(LandingPage), findsOneWidget);
     });
   });

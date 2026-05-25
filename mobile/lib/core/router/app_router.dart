@@ -7,6 +7,7 @@ import 'package:mobile/features/auth/presentation/onboarding_page.dart';
 import 'package:mobile/features/home/presentation/home_page.dart';
 import 'package:mobile/features/auth/providers/auth_provider.dart';
 import 'package:mobile/features/workouts/presentation/add_workout_page.dart';
+import 'package:mobile/features/meals/presentation/add_meal_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -63,6 +64,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/add-workout',
         builder: (context, state) => const AddWorkoutPage(),
+      ),
+      GoRoute(
+        path: '/add-meal',
+        builder: (context, state) => const AddMealPage(),
       ),
     ],
   );

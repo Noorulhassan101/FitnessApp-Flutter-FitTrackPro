@@ -82,6 +82,28 @@ class LocalDatabase extends _$LocalDatabase {
   Future<void> deleteWorkoutLocal(String id) {
     return (delete<Workouts, Workout>(workouts)..where((t) => t.id.equals(id))).go();
   }
+
+  // Meal Queries
+  Stream<List<Meal>> watchMealsForDay(String userId, DateTime date) {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+    return (select(meals)
+          ..where((t) => t.userId.equals(userId) & t.loggedAt.isBetweenValues(startOfDay, endOfDay))
+          ..orderBy([(t) => OrderingTerm(expression: t.loggedAt, mode: OrderingMode.desc)]))
+        .watch();
+  }
+
+  Future<List<Meal>> getUnsyncedMeals() {
+    return (select(meals)..where((t) => t.isSynced.equals(false))).get();
+  }
+
+  Future<void> upsertMeal(Meal meal) {
+    return into(meals).insertOnConflictUpdate(meal);
+  }
+
+  Future<void> deleteMealLocal(String id) {
+    return (delete<Meals, Meal>(meals)..where((t) => t.id.equals(id))).go();
+  }
 }
 
 LazyDatabase _openConnection() {
