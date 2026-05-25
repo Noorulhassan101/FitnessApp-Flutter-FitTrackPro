@@ -54,12 +54,38 @@ class Meals extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Users, Workouts, Meals])
+// Daily Summary Table Definition
+class DailySummaries extends Table {
+  TextColumn get id => text()();
+  TextColumn get userId => text()();
+  DateTimeColumn get date => dateTime()();
+  RealColumn get totalCaloriesBurned => real().withDefault(const Constant(0.0))();
+  RealColumn get totalCaloriesConsumed => real().withDefault(const Constant(0.0))();
+  RealColumn get netCalories => real().withDefault(const Constant(0.0))();
+  IntColumn get streakDay => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(tables: [Users, Workouts, Meals, DailySummaries])
 class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async {
+          await m.createAll();
+        },
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(dailySummaries);
+          }
+        },
+      );
 
   // Workout Queries
   Stream<List<Workout>> watchWorkoutsForDay(String userId, DateTime date) {
@@ -103,6 +129,19 @@ class LocalDatabase extends _$LocalDatabase {
 
   Future<void> deleteMealLocal(String id) {
     return (delete<Meals, Meal>(meals)..where((t) => t.id.equals(id))).go();
+  }
+
+  // Daily Summary Queries
+  Stream<List<DailySummary>> watchWeeklySummaries(String userId) {
+    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+    return (select(dailySummaries)
+          ..where((t) => t.userId.equals(userId) & t.date.isBiggerThanValue(sevenDaysAgo))
+          ..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.asc)]))
+        .watch();
+  }
+
+  Future<void> upsertSummary(DailySummary summary) {
+    return into(dailySummaries).insertOnConflictUpdate(summary);
   }
 }
 

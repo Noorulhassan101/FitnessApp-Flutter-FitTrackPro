@@ -1659,17 +1659,501 @@ class MealsCompanion extends UpdateCompanion<Meal> {
   }
 }
 
+class $DailySummariesTable extends DailySummaries
+    with TableInfo<$DailySummariesTable, DailySummary> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailySummariesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalCaloriesBurnedMeta =
+      const VerificationMeta('totalCaloriesBurned');
+  @override
+  late final GeneratedColumn<double> totalCaloriesBurned =
+      GeneratedColumn<double>(
+        'total_calories_burned',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0.0),
+      );
+  static const VerificationMeta _totalCaloriesConsumedMeta =
+      const VerificationMeta('totalCaloriesConsumed');
+  @override
+  late final GeneratedColumn<double> totalCaloriesConsumed =
+      GeneratedColumn<double>(
+        'total_calories_consumed',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0.0),
+      );
+  static const VerificationMeta _netCaloriesMeta = const VerificationMeta(
+    'netCalories',
+  );
+  @override
+  late final GeneratedColumn<double> netCalories = GeneratedColumn<double>(
+    'net_calories',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _streakDayMeta = const VerificationMeta(
+    'streakDay',
+  );
+  @override
+  late final GeneratedColumn<int> streakDay = GeneratedColumn<int>(
+    'streak_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    date,
+    totalCaloriesBurned,
+    totalCaloriesConsumed,
+    netCalories,
+    streakDay,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_summaries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DailySummary> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('total_calories_burned')) {
+      context.handle(
+        _totalCaloriesBurnedMeta,
+        totalCaloriesBurned.isAcceptableOrUnknown(
+          data['total_calories_burned']!,
+          _totalCaloriesBurnedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_calories_consumed')) {
+      context.handle(
+        _totalCaloriesConsumedMeta,
+        totalCaloriesConsumed.isAcceptableOrUnknown(
+          data['total_calories_consumed']!,
+          _totalCaloriesConsumedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('net_calories')) {
+      context.handle(
+        _netCaloriesMeta,
+        netCalories.isAcceptableOrUnknown(
+          data['net_calories']!,
+          _netCaloriesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('streak_day')) {
+      context.handle(
+        _streakDayMeta,
+        streakDay.isAcceptableOrUnknown(data['streak_day']!, _streakDayMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DailySummary map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailySummary(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date'],
+      )!,
+      totalCaloriesBurned: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_calories_burned'],
+      )!,
+      totalCaloriesConsumed: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_calories_consumed'],
+      )!,
+      netCalories: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}net_calories'],
+      )!,
+      streakDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}streak_day'],
+      )!,
+    );
+  }
+
+  @override
+  $DailySummariesTable createAlias(String alias) {
+    return $DailySummariesTable(attachedDatabase, alias);
+  }
+}
+
+class DailySummary extends DataClass implements Insertable<DailySummary> {
+  final String id;
+  final String userId;
+  final DateTime date;
+  final double totalCaloriesBurned;
+  final double totalCaloriesConsumed;
+  final double netCalories;
+  final int streakDay;
+  const DailySummary({
+    required this.id,
+    required this.userId,
+    required this.date,
+    required this.totalCaloriesBurned,
+    required this.totalCaloriesConsumed,
+    required this.netCalories,
+    required this.streakDay,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['date'] = Variable<DateTime>(date);
+    map['total_calories_burned'] = Variable<double>(totalCaloriesBurned);
+    map['total_calories_consumed'] = Variable<double>(totalCaloriesConsumed);
+    map['net_calories'] = Variable<double>(netCalories);
+    map['streak_day'] = Variable<int>(streakDay);
+    return map;
+  }
+
+  DailySummariesCompanion toCompanion(bool nullToAbsent) {
+    return DailySummariesCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      date: Value(date),
+      totalCaloriesBurned: Value(totalCaloriesBurned),
+      totalCaloriesConsumed: Value(totalCaloriesConsumed),
+      netCalories: Value(netCalories),
+      streakDay: Value(streakDay),
+    );
+  }
+
+  factory DailySummary.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailySummary(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      totalCaloriesBurned: serializer.fromJson<double>(
+        json['totalCaloriesBurned'],
+      ),
+      totalCaloriesConsumed: serializer.fromJson<double>(
+        json['totalCaloriesConsumed'],
+      ),
+      netCalories: serializer.fromJson<double>(json['netCalories']),
+      streakDay: serializer.fromJson<int>(json['streakDay']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'date': serializer.toJson<DateTime>(date),
+      'totalCaloriesBurned': serializer.toJson<double>(totalCaloriesBurned),
+      'totalCaloriesConsumed': serializer.toJson<double>(totalCaloriesConsumed),
+      'netCalories': serializer.toJson<double>(netCalories),
+      'streakDay': serializer.toJson<int>(streakDay),
+    };
+  }
+
+  DailySummary copyWith({
+    String? id,
+    String? userId,
+    DateTime? date,
+    double? totalCaloriesBurned,
+    double? totalCaloriesConsumed,
+    double? netCalories,
+    int? streakDay,
+  }) => DailySummary(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    date: date ?? this.date,
+    totalCaloriesBurned: totalCaloriesBurned ?? this.totalCaloriesBurned,
+    totalCaloriesConsumed: totalCaloriesConsumed ?? this.totalCaloriesConsumed,
+    netCalories: netCalories ?? this.netCalories,
+    streakDay: streakDay ?? this.streakDay,
+  );
+  DailySummary copyWithCompanion(DailySummariesCompanion data) {
+    return DailySummary(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      date: data.date.present ? data.date.value : this.date,
+      totalCaloriesBurned: data.totalCaloriesBurned.present
+          ? data.totalCaloriesBurned.value
+          : this.totalCaloriesBurned,
+      totalCaloriesConsumed: data.totalCaloriesConsumed.present
+          ? data.totalCaloriesConsumed.value
+          : this.totalCaloriesConsumed,
+      netCalories: data.netCalories.present
+          ? data.netCalories.value
+          : this.netCalories,
+      streakDay: data.streakDay.present ? data.streakDay.value : this.streakDay,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailySummary(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('date: $date, ')
+          ..write('totalCaloriesBurned: $totalCaloriesBurned, ')
+          ..write('totalCaloriesConsumed: $totalCaloriesConsumed, ')
+          ..write('netCalories: $netCalories, ')
+          ..write('streakDay: $streakDay')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    date,
+    totalCaloriesBurned,
+    totalCaloriesConsumed,
+    netCalories,
+    streakDay,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailySummary &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.date == this.date &&
+          other.totalCaloriesBurned == this.totalCaloriesBurned &&
+          other.totalCaloriesConsumed == this.totalCaloriesConsumed &&
+          other.netCalories == this.netCalories &&
+          other.streakDay == this.streakDay);
+}
+
+class DailySummariesCompanion extends UpdateCompanion<DailySummary> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<DateTime> date;
+  final Value<double> totalCaloriesBurned;
+  final Value<double> totalCaloriesConsumed;
+  final Value<double> netCalories;
+  final Value<int> streakDay;
+  final Value<int> rowid;
+  const DailySummariesCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.totalCaloriesBurned = const Value.absent(),
+    this.totalCaloriesConsumed = const Value.absent(),
+    this.netCalories = const Value.absent(),
+    this.streakDay = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DailySummariesCompanion.insert({
+    required String id,
+    required String userId,
+    required DateTime date,
+    this.totalCaloriesBurned = const Value.absent(),
+    this.totalCaloriesConsumed = const Value.absent(),
+    this.netCalories = const Value.absent(),
+    this.streakDay = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       date = Value(date);
+  static Insertable<DailySummary> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<DateTime>? date,
+    Expression<double>? totalCaloriesBurned,
+    Expression<double>? totalCaloriesConsumed,
+    Expression<double>? netCalories,
+    Expression<int>? streakDay,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (date != null) 'date': date,
+      if (totalCaloriesBurned != null)
+        'total_calories_burned': totalCaloriesBurned,
+      if (totalCaloriesConsumed != null)
+        'total_calories_consumed': totalCaloriesConsumed,
+      if (netCalories != null) 'net_calories': netCalories,
+      if (streakDay != null) 'streak_day': streakDay,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DailySummariesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<DateTime>? date,
+    Value<double>? totalCaloriesBurned,
+    Value<double>? totalCaloriesConsumed,
+    Value<double>? netCalories,
+    Value<int>? streakDay,
+    Value<int>? rowid,
+  }) {
+    return DailySummariesCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      date: date ?? this.date,
+      totalCaloriesBurned: totalCaloriesBurned ?? this.totalCaloriesBurned,
+      totalCaloriesConsumed:
+          totalCaloriesConsumed ?? this.totalCaloriesConsumed,
+      netCalories: netCalories ?? this.netCalories,
+      streakDay: streakDay ?? this.streakDay,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (totalCaloriesBurned.present) {
+      map['total_calories_burned'] = Variable<double>(
+        totalCaloriesBurned.value,
+      );
+    }
+    if (totalCaloriesConsumed.present) {
+      map['total_calories_consumed'] = Variable<double>(
+        totalCaloriesConsumed.value,
+      );
+    }
+    if (netCalories.present) {
+      map['net_calories'] = Variable<double>(netCalories.value);
+    }
+    if (streakDay.present) {
+      map['streak_day'] = Variable<int>(streakDay.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailySummariesCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('date: $date, ')
+          ..write('totalCaloriesBurned: $totalCaloriesBurned, ')
+          ..write('totalCaloriesConsumed: $totalCaloriesConsumed, ')
+          ..write('netCalories: $netCalories, ')
+          ..write('streakDay: $streakDay, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$LocalDatabase extends GeneratedDatabase {
   _$LocalDatabase(QueryExecutor e) : super(e);
   $LocalDatabaseManager get managers => $LocalDatabaseManager(this);
   late final $UsersTable users = $UsersTable(this);
   late final $WorkoutsTable workouts = $WorkoutsTable(this);
   late final $MealsTable meals = $MealsTable(this);
+  late final $DailySummariesTable dailySummaries = $DailySummariesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [users, workouts, meals];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    users,
+    workouts,
+    meals,
+    dailySummaries,
+  ];
 }
 
 typedef $$UsersTableCreateCompanionBuilder =
@@ -2479,6 +2963,252 @@ typedef $$MealsTableProcessedTableManager =
       Meal,
       PrefetchHooks Function()
     >;
+typedef $$DailySummariesTableCreateCompanionBuilder =
+    DailySummariesCompanion Function({
+      required String id,
+      required String userId,
+      required DateTime date,
+      Value<double> totalCaloriesBurned,
+      Value<double> totalCaloriesConsumed,
+      Value<double> netCalories,
+      Value<int> streakDay,
+      Value<int> rowid,
+    });
+typedef $$DailySummariesTableUpdateCompanionBuilder =
+    DailySummariesCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<DateTime> date,
+      Value<double> totalCaloriesBurned,
+      Value<double> totalCaloriesConsumed,
+      Value<double> netCalories,
+      Value<int> streakDay,
+      Value<int> rowid,
+    });
+
+class $$DailySummariesTableFilterComposer
+    extends Composer<_$LocalDatabase, $DailySummariesTable> {
+  $$DailySummariesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalCaloriesBurned => $composableBuilder(
+    column: $table.totalCaloriesBurned,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalCaloriesConsumed => $composableBuilder(
+    column: $table.totalCaloriesConsumed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get netCalories => $composableBuilder(
+    column: $table.netCalories,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get streakDay => $composableBuilder(
+    column: $table.streakDay,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DailySummariesTableOrderingComposer
+    extends Composer<_$LocalDatabase, $DailySummariesTable> {
+  $$DailySummariesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalCaloriesBurned => $composableBuilder(
+    column: $table.totalCaloriesBurned,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalCaloriesConsumed => $composableBuilder(
+    column: $table.totalCaloriesConsumed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get netCalories => $composableBuilder(
+    column: $table.netCalories,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get streakDay => $composableBuilder(
+    column: $table.streakDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DailySummariesTableAnnotationComposer
+    extends Composer<_$LocalDatabase, $DailySummariesTable> {
+  $$DailySummariesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<double> get totalCaloriesBurned => $composableBuilder(
+    column: $table.totalCaloriesBurned,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalCaloriesConsumed => $composableBuilder(
+    column: $table.totalCaloriesConsumed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get netCalories => $composableBuilder(
+    column: $table.netCalories,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get streakDay =>
+      $composableBuilder(column: $table.streakDay, builder: (column) => column);
+}
+
+class $$DailySummariesTableTableManager
+    extends
+        RootTableManager<
+          _$LocalDatabase,
+          $DailySummariesTable,
+          DailySummary,
+          $$DailySummariesTableFilterComposer,
+          $$DailySummariesTableOrderingComposer,
+          $$DailySummariesTableAnnotationComposer,
+          $$DailySummariesTableCreateCompanionBuilder,
+          $$DailySummariesTableUpdateCompanionBuilder,
+          (
+            DailySummary,
+            BaseReferences<_$LocalDatabase, $DailySummariesTable, DailySummary>,
+          ),
+          DailySummary,
+          PrefetchHooks Function()
+        > {
+  $$DailySummariesTableTableManager(
+    _$LocalDatabase db,
+    $DailySummariesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailySummariesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailySummariesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailySummariesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<double> totalCaloriesBurned = const Value.absent(),
+                Value<double> totalCaloriesConsumed = const Value.absent(),
+                Value<double> netCalories = const Value.absent(),
+                Value<int> streakDay = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailySummariesCompanion(
+                id: id,
+                userId: userId,
+                date: date,
+                totalCaloriesBurned: totalCaloriesBurned,
+                totalCaloriesConsumed: totalCaloriesConsumed,
+                netCalories: netCalories,
+                streakDay: streakDay,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                required DateTime date,
+                Value<double> totalCaloriesBurned = const Value.absent(),
+                Value<double> totalCaloriesConsumed = const Value.absent(),
+                Value<double> netCalories = const Value.absent(),
+                Value<int> streakDay = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailySummariesCompanion.insert(
+                id: id,
+                userId: userId,
+                date: date,
+                totalCaloriesBurned: totalCaloriesBurned,
+                totalCaloriesConsumed: totalCaloriesConsumed,
+                netCalories: netCalories,
+                streakDay: streakDay,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DailySummariesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$LocalDatabase,
+      $DailySummariesTable,
+      DailySummary,
+      $$DailySummariesTableFilterComposer,
+      $$DailySummariesTableOrderingComposer,
+      $$DailySummariesTableAnnotationComposer,
+      $$DailySummariesTableCreateCompanionBuilder,
+      $$DailySummariesTableUpdateCompanionBuilder,
+      (
+        DailySummary,
+        BaseReferences<_$LocalDatabase, $DailySummariesTable, DailySummary>,
+      ),
+      DailySummary,
+      PrefetchHooks Function()
+    >;
 
 class $LocalDatabaseManager {
   final _$LocalDatabase _db;
@@ -2489,4 +3219,6 @@ class $LocalDatabaseManager {
       $$WorkoutsTableTableManager(_db, _db.workouts);
   $$MealsTableTableManager get meals =>
       $$MealsTableTableManager(_db, _db.meals);
+  $$DailySummariesTableTableManager get dailySummaries =>
+      $$DailySummariesTableTableManager(_db, _db.dailySummaries);
 }

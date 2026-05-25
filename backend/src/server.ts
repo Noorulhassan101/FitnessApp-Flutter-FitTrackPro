@@ -6,6 +6,7 @@ import { authRoutes } from './controllers/auth.controller';
 import { userRoutes } from './controllers/user.controller';
 import { workoutRoutes } from './controllers/workout.controller';
 import { mealRoutes } from './controllers/meal.controller';
+import { summaryRoutes } from './controllers/summary.controller';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ async function start() {
     await server.register(userRoutes, { prefix: '/api/v1/user' });
     await server.register(workoutRoutes, { prefix: '/api/v1/workouts' });
     await server.register(mealRoutes, { prefix: '/api/v1/meals' });
+    await server.register(summaryRoutes, { prefix: '/api/v1/summary' });
 
     // Health route
     server.get('/health', async (_request, reply) => {

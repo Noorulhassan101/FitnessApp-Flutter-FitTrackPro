@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/core/database/local_database.dart';
 import 'package:mobile/features/auth/providers/auth_provider.dart';
 import 'package:mobile/features/home/providers/home_provider.dart';
 import 'package:mobile/features/workouts/providers/workouts_provider.dart';
 import 'package:mobile/features/meals/providers/meals_provider.dart';
+import 'package:mobile/features/stats/presentation/stats_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -121,18 +121,7 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
   Widget _buildBody(HomeData homeData) {
     switch (_currentIndex) {
       case 1:
-        return const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.insert_chart_rounded, size: 64, color: Colors.black26),
-              SizedBox(height: 16),
-              Text('Coming Soon', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black54)),
-              SizedBox(height: 8),
-              Text('Stats will be available in a future update.', style: TextStyle(color: Colors.black38)),
-            ],
-          ),
-        );
+        return const StatsPage();
       case 2:
         return const Center(
           child: Column(
