@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/core/database/local_database.dart';
 import 'package:mobile/features/profile/providers/profile_provider.dart';
+import 'package:mobile/features/notifications/providers/notification_provider.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -254,6 +255,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     _buildSectionHeader('Goals & Preferences'),
                     const SizedBox(height: 12),
                     _buildGoalsPreferencesFields(),
+                    const SizedBox(height: 24),
+
+                    // Reminders & Settings
+                    _buildSectionHeader('Reminders & Settings'),
+                    const SizedBox(height: 12),
+                    _buildRemindersCard(),
                     const SizedBox(height: 32),
 
                     // Save Button
@@ -536,5 +543,199 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ],
       ),
     );
+  }
+
+  Widget _buildRemindersCard() {
+    final settings = ref.watch(notificationSettingsProvider);
+    final notifier = ref.read(notificationSettingsProvider.notifier);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Permission status / Grant action
+          if (!settings.permissionGranted) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A36A8).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.notifications_active_outlined, color: Color(0xFF1A36A8)),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Notifications are disabled. Enable reminders to stay on track!',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1A36A8),
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => notifier.requestPermissions(),
+                    child: const Text(
+                      'Enable',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A36A8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Breakfast Reminder
+          _buildReminderRow(
+            title: 'Breakfast Reminder',
+            subtitle: 'Log your morning meal',
+            enabled: settings.breakfastReminder,
+            hour: settings.breakfastHour,
+            minute: settings.breakfastMinute,
+            onChanged: (val) => notifier.updateBreakfastReminder(val),
+            onTapTime: () => _selectTime(
+              context,
+              settings.breakfastHour,
+              settings.breakfastMinute,
+              (h, m) => notifier.updateBreakfastTime(h, m),
+            ),
+          ),
+          const Divider(height: 24, thickness: 0.8),
+
+          // Lunch Reminder
+          _buildReminderRow(
+            title: 'Lunch Reminder',
+            subtitle: 'Log your midday meal',
+            enabled: settings.lunchReminder,
+            hour: settings.lunchHour,
+            minute: settings.lunchMinute,
+            onChanged: (val) => notifier.updateLunchReminder(val),
+            onTapTime: () => _selectTime(
+              context,
+              settings.lunchHour,
+              settings.lunchMinute,
+              (h, m) => notifier.updateLunchTime(h, m),
+            ),
+          ),
+          const Divider(height: 24, thickness: 0.8),
+
+          // Dinner Reminder
+          _buildReminderRow(
+            title: 'Dinner Reminder',
+            subtitle: 'Log your evening meal',
+            enabled: settings.dinnerReminder,
+            hour: settings.dinnerHour,
+            minute: settings.dinnerMinute,
+            onChanged: (val) => notifier.updateDinnerReminder(val),
+            onTapTime: () => _selectTime(
+              context,
+              settings.dinnerHour,
+              settings.dinnerMinute,
+              (h, m) => notifier.updateDinnerTime(h, m),
+            ),
+          ),
+          const Divider(height: 24, thickness: 0.8),
+
+          // Daily Summary Reminder
+          _buildReminderRow(
+            title: 'Daily Summary',
+            subtitle: 'Calorie and streak analysis',
+            enabled: settings.dailySummaryReminder,
+            hour: settings.dailySummaryHour,
+            minute: settings.dailySummaryMinute,
+            onChanged: (val) => notifier.updateDailySummaryReminder(val),
+            onTapTime: () => _selectTime(
+              context,
+              settings.dailySummaryHour,
+              settings.dailySummaryMinute,
+              (h, m) => notifier.updateDailySummaryTime(h, m),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReminderRow({
+    required String title,
+    required String subtitle,
+    required bool enabled,
+    required int hour,
+    required int minute,
+    required ValueChanged<bool> onChanged,
+    required VoidCallback onTapTime,
+  }) {
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final formattedHour = hour == 0
+        ? 12
+        : hour > 12
+            ? hour - 12
+            : hour;
+    final formattedMinute = minute.toString().padLeft(2, '0');
+    final timeText = '$formattedHour:$formattedMinute $period';
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: const TextStyle(fontSize: 13, color: Colors.black54),
+              ),
+            ],
+          ),
+        ),
+        if (enabled) ...[
+          OutlinedButton(
+            onPressed: onTapTime,
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              side: const BorderSide(color: Colors.black12),
+            ),
+            child: Text(
+              timeText,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A36A8)),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+        Switch.adaptive(
+          value: enabled,
+          onChanged: onChanged,
+          activeColor: const Color(0xFF1A36A8),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _selectTime(
+      BuildContext context, int currentHour, int currentMinute, Function(int, int) onTimeSelected) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: currentHour, minute: currentMinute),
+    );
+    if (picked != null) {
+      onTimeSelected(picked.hour, picked.minute);
+    }
   }
 }
