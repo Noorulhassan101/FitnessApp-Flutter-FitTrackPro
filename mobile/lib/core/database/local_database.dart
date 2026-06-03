@@ -72,7 +72,7 @@ class DailySummaries extends Table {
 
 @DriftDatabase(tables: [Users, Workouts, Meals, DailySummaries])
 class LocalDatabase extends _$LocalDatabase {
-  LocalDatabase() : super(_openConnection());
+  LocalDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
   int get schemaVersion => 3;
