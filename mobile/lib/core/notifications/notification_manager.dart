@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -13,9 +14,14 @@ class NotificationManager {
   Future<void> init() async {
     tz.initializeTimeZones();
     try {
-      tz.setLocalLocation(tz.getLocation('America/Detroit'));
+      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
     } catch (_) {
-      tz.setLocalLocation(tz.UTC);
+      try {
+        tz.setLocalLocation(tz.getLocation('America/Detroit'));
+      } catch (_) {
+        tz.setLocalLocation(tz.UTC);
+      }
     }
 
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
