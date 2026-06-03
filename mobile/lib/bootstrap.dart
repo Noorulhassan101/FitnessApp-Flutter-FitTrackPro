@@ -12,10 +12,18 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+    try {
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      }
+    } catch (e) {
+      if (e.toString().contains('duplicate-app') || e.toString().contains('already exists')) {
+        log('Firebase already initialized natively, ignoring: $e');
+      } else {
+        rethrow;
+      }
     }
 
     FlutterError.onError = (details) {
