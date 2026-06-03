@@ -13,7 +13,10 @@ final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
       // 10.0.2.2 points to localhost of host machine from Android Emulator
-      baseUrl: Platform.isAndroid ? 'http://10.0.2.2:5005/api/v1' : 'http://localhost:5005/api/v1',
+      baseUrl: const String.fromEnvironment(
+        'API_BASE_URL',
+        defaultValue: Platform.isAndroid ? 'http://10.0.2.2:5005/api/v1' : 'http://localhost:5005/api/v1',
+      ),
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ),
